@@ -1,0 +1,1 @@
+{ "name": "fixture-dead-code", "private": true, "type": "module", "main": "./index.ts" }

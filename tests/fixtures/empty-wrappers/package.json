@@ -1,0 +1,1 @@
+{ "name": "fixture-empty-wrappers", "private": true, "type": "module", "main": "./user.ts" }

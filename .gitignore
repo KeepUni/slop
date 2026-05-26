@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.log
+*.tgz
+.DS_Store
+.vscode/
+.idea/
+coverage/
+.env
+.env.local
+.claude/
+
+external-tests/

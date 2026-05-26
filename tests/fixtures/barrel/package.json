@@ -1,0 +1,1 @@
+{ "name": "probe-barrel", "private": true, "type": "module", "main": "./consumer.ts" }

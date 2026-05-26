@@ -1,0 +1,32 @@
+# Changelog
+
+## [0.1.0]
+
+Initial release.
+
+### Detectors
+
+- `dead-code` — exported declarations with zero references.
+- `unused-export` — symbols used only within their own file.
+- `duplicates` — token-window + AST-structural; clusters coalesced via union-find.
+- `empty-wrapper` — pass-throughs: `return g(args)`, two-statement `const x = g(args); return x;`, type-assertion `return g(args) as T;`, and JSX spread wrappers.
+- `useless-type-predicate` — guards that collapse to bare `typeof` / `instanceof` / `Array.isArray`.
+- `same-shape-types` — interfaces or type aliases with identical fields across files.
+- `useless-async` — `async function` with no `await`, no `for await`, no Promise return.
+- `empty-catch` — `catch {}` or `catch (e) {}` with empty body, plus pure rethrow `catch (e) { throw e; }`.
+
+### Insights
+
+`orphaned-file`, `scaffold-folder`, `dead-wrapper-chain`, `dead-duplicate-pair`, `wrapper-only-file`, `over-abstraction-chain`.
+
+### `--fix`
+
+Diff preview, snapshot-and-verify, atomic rollback across the workspace if any removal would break a reference.
+
+### Monorepo (beta)
+
+Per-package scan; per-symbol cross-package resolution for named / default / namespace imports.
+
+### CLI
+
+`--fix`, `--json`, `--only`, `--ignore`, `--min-confidence` (default 0.7), `--verbose`, `--no-color`, `-y`. Confidence-colored output, OSC 8 hyperlinks.
