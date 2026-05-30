@@ -268,13 +268,19 @@ function buildDeadDuplicatePairs(
     const primaryDead = findContainingDead(dup.primary.file, dup.primary.line, deadByFile);
     if (!primaryDead) continue;
 
+    const seen = new Set<DeadCodeIssue>([primaryDead]);
     const matchDead: DeadCodeIssue[] = [];
+    let ok = true;
     for (const m of dup.matches) {
       const md = findContainingDead(m.file, m.line, deadByFile);
-      if (!md) break;
+      if (!md || seen.has(md)) {
+        ok = false;
+        break;
+      }
+      seen.add(md);
       matchDead.push(md);
     }
-    if (matchDead.length !== dup.matches.length) continue;
+    if (!ok) continue;
 
     consumed.add(dup);
     consumed.add(primaryDead);

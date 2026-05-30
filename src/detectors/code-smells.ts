@@ -45,8 +45,12 @@ export const codeSmellsDetector: Detector = {
 const PUBLICATION_DIR_RE =
   /[\\/](?:registry|styles|themes|variants|templates?|examples|presets|demos|icons|assets)[\\/]/i;
 
+const MIGRATIONS_PATH_RE = /[\\/]migrations?[\\/]/i;
+
 function collectUselessAsync(sf: SourceFile, rootDir: string, out: Issue[]): void {
-  if (PUBLICATION_DIR_RE.test(sf.getFilePath())) return;
+  const filePath = sf.getFilePath();
+  if (PUBLICATION_DIR_RE.test(filePath)) return;
+  if (MIGRATIONS_PATH_RE.test(filePath)) return;
   sf.forEachDescendant((node) => {
     if (
       !Node.isFunctionDeclaration(node) &&

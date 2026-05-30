@@ -1,6 +1,6 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { Project, ScriptTarget } from "ts-morph";
+import { Project, ScriptTarget, ts } from "ts-morph";
 
 interface BuildProjectOptions {
   projectRoot: string;
@@ -9,7 +9,7 @@ interface BuildProjectOptions {
 
 export function buildProject(opts: BuildProjectOptions): Project {
   const { projectRoot, files } = opts;
-  const tsConfigPath = findTsConfigIn(projectRoot);
+  const tsConfigPath = resolveEffectiveTsConfig(projectRoot);
 
   const project = new Project({
     tsConfigFilePath: tsConfigPath,
@@ -42,6 +42,52 @@ function findTsConfigIn(dir: string): string | undefined {
     const candidate = join(dir, name);
     if (existsSync(candidate)) return candidate;
   }
+  return undefined;
+}
+
+function resolveEffectiveTsConfig(projectRoot: string): string | undefined {
+  const root = findTsConfigIn(projectRoot);
+  if (!root) return undefined;
+  const cfg = readTsConfig(root);
+  if (!cfg) return root;
+  if (cfg.compilerOptions?.paths) return root;
+  const refs = Array.isArray(cfg.references) ? cfg.references : undefined;
+  if (!refs) return root;
+  for (const ref of refs) {
+    if (!ref || typeof ref.path !== "string") continue;
+    const refPath = resolveRefPath(dirname(root), ref.path);
+    if (!refPath) continue;
+    const refCfg = readTsConfig(refPath);
+    if (refCfg?.compilerOptions?.paths) return refPath;
+  }
+  return root;
+}
+
+interface TsConfigShape {
+  compilerOptions?: { paths?: Record<string, string[]> };
+  references?: Array<{ path?: string }>;
+}
+
+function readTsConfig(path: string): TsConfigShape | undefined {
+  try {
+    const raw = readFileSync(path, "utf8");
+    const parsed = ts.parseConfigFileTextToJson(path, raw);
+    if (parsed.error || !parsed.config) return undefined;
+    return parsed.config as TsConfigShape;
+  } catch {
+    return undefined;
+  }
+}
+
+function resolveRefPath(baseDir: string, refPath: string): string | undefined {
+  const candidate = resolve(baseDir, refPath);
+  if (existsSync(candidate)) {
+    if (candidate.endsWith(".json")) return candidate;
+    const inner = join(candidate, "tsconfig.json");
+    if (existsSync(inner)) return inner;
+  }
+  const asJson = `${candidate}.json`;
+  if (existsSync(asJson)) return asJson;
   return undefined;
 }
 

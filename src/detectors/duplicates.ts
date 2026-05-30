@@ -128,6 +128,12 @@ export const duplicatesDetector: Detector = {
           const clipped = clipMatchToFunctionBodies(tokensA, tokensB, match, sfA, sfB, bodyCache);
           if (!clipped) continue;
 
+          if (a.file === b.file) {
+            const midA = tokensA[clipped.startA + Math.floor(clipped.len / 2)].pos;
+            const midB = tokensB[clipped.startB + Math.floor(clipped.len / 2)].pos;
+            if (shareSiblingContainer(sfA, midA, midB)) continue;
+          }
+
           const sliceA = tokensA.slice(clipped.startA, clipped.startA + clipped.len);
           const sliceB = tokensB.slice(clipped.startB, clipped.startB + clipped.len);
           const sim = rawIdentityRatio(sliceA, sliceB);
@@ -323,6 +329,31 @@ function clipMatchToFunctionBodies(
     startB: match.startB + front,
     len: newLen,
   };
+}
+
+function shareSiblingContainer(sf: SourceFile, posA: number, posB: number): boolean {
+  const common = lowestCommonContainer(sf, posA, posB);
+  if (!common) return false;
+  return (
+    Node.isJsxElement(common) ||
+    Node.isJsxFragment(common) ||
+    Node.isArrayLiteralExpression(common)
+  );
+}
+
+function lowestCommonContainer(sf: SourceFile, posA: number, posB: number): Node | undefined {
+  const ancestorsA = new Set<Node>();
+  let nodeA: Node | undefined = sf.getDescendantAtPos(posA);
+  while (nodeA) {
+    ancestorsA.add(nodeA);
+    nodeA = nodeA.getParent();
+  }
+  let nodeB: Node | undefined = sf.getDescendantAtPos(posB);
+  while (nodeB) {
+    if (ancestorsA.has(nodeB)) return nodeB;
+    nodeB = nodeB.getParent();
+  }
+  return undefined;
 }
 
 function enclosingFunctionBody(sf: SourceFile, pos: number): Block | undefined {

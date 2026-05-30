@@ -1,6 +1,6 @@
 {
   "name": "@findai/slp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Static analysis for JS/TS: dead exports, duplicates, empty wrappers (incl. JSX), useless type predicates, same-shape types, useless async, empty catch, plus cross-detector insights. Zero config, safe --fix.",
   "type": "module",
   "bin": {
